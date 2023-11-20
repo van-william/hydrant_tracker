@@ -1,0 +1,18 @@
+<!-- templates/update_metadata.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Metadata</title>
+</head>
+<body>
+    <h1>Update Metadata</h1>
+    <form method="POST" action="">
+        <label for="metadata">Metadata:</label>
+        <input type="text" id="metadata" name="metadata" value="{{ point.metadata }}" required>
+        <br>
+        <button type="submit">Update Metadata</button>
+    </form>
+</body>
+</html>

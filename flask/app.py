@@ -1,42 +1,31 @@
 # app.py
-from flask import Flask, render_template
-import plotly.express as px
-import pandas as pd
-import plotly
-import json
-
+from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hydrant.db'
+db = SQLAlchemy(app)
+
+class Point(db.Model):
+    index = db.Column(db.Integer, primary_key=True)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(255))
 
 @app.route('/')
 def index():
-    # Create a Plotly figure (replace this with your actual data)
-    
-    df = pd.read_csv('./static/hydrants.csv')
-    color_scale = {'not ok': 'red', 'ok': 'green', 'needs testing': 'yellow'} 
+    points = Point.query.all()
+    return render_template('index.html', points=points)
 
-    fig = px.scatter_mapbox(df, 
-                            lat="latitude", 
-                            lon="longitude", 
-                            hover_name="status", 
-                            hover_data=["status", "pressure"],
-                            color='status',
-                            color_discrete_map=color_scale,  # Specify color scale
-                            zoom=8, 
-                            height=800,
-                            width=800)
-
-    fig.update_layout(mapbox_style="open-street-map")
-    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-
-    # Update legend
-    fig.update_traces(marker=dict(size=10))  # Adjust marker size as needed
-    fig.update_layout(legend_title_text='status')
-
-    # Convert the Plotly figure to JSON
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-
-    return render_template('index.html', graphJSON=graphJSON)
+@app.route('/update_metadata/<int:point_id>', methods=['GET', 'POST'])
+def update_metadata(point_id):
+    point = Point.query.get(point_id)
+    if request.method == 'POST':
+        point.metadata = request.form['metadata']
+        db.session.commit()
+        return redirect(url_for('index'))
+    return render_template('update_metadata.html', point=point)
 
 if __name__ == '__main__':
+    db.create_all()
     app.run(debug=True)

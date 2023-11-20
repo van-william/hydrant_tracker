@@ -4,16 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Plotly App</title>
- 
+    <title>Map with Metadata</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='map_style.css') }}">
 </head>
 <body>
-    <h1>Hydrant Tracker</h1>
-    <div id='chart' class='chart'”></div>
-  </body>
-  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
-  <script type='text/javascript'>
-    var graphs = {{graphJSON | safe}};
-    Plotly.plot('chart',graphs,{});
-  </script>
-  </html>
+    <h1>Map with Metadata</h1>
+    <div id="map"></div>
+    <ul>
+        {% for point in points %}
+            <li>
+                Latitude: {{ point.latitude }}, Longitude: {{ point.longitude }}
+                <a href="{{ url_for('update_metadata', point_id=point.id) }}">Update Metadata</a>
+                Metadata: {{ point.metadata }}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
