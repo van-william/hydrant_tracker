@@ -4,11 +4,19 @@ import os
 import pandas as pd
 import sqlite3
 import plotly.express as px
+import psycopg2
+from sqlalchemy import URL
+from sqlalchemy import create_engine
 
 # Define your password
 correct_password = os.environ.get('HYDRANT_PASSWORD')
-db_table = os.environ.get('HYDRANT_DB_TABLE')
 
+db_host = os.getenv('HYDRANT_DB_HOST')
+db_name = os.getenv('HYDRANT_DB')
+db_user = os.getenv('HYDRANT_USER')
+db_password = os.getenv('HYDRANT_PASS')
+db_port = os.getenv('HYDRANT_PORT')
+db_table = os.environ.get('HYDRANT_DB_TABLE')
 
 
 # Streamlit page configuration
@@ -17,44 +25,59 @@ st.set_page_config(page_title='Hydrant Tracker', layout='centered')
 
 def get_map_data():
     # Establish a connection to the database
-    conn = sqlite3.connect('./streamlit/hydrant.db')
-
+    url_object = URL.create(
+    "postgresql",
+    username=os.getenv('HYDRANT_USER'),
+    password=os.getenv('HYDRANT_PASS'),
+    host=os.getenv('HYDRANT_DB_HOST'),
+    database=os.getenv('HYDRANT_DB'),
+)
+    # Create a SQLAlchemy engine
+    engine = create_engine(url_object)
     # Write your SQL query
     query = "SELECT * FROM " + db_table
 
-    # Convert the SQL query result to a DataFrame
-    df = pd.read_sql_query(query, conn)
-
-    # Close the connection
-    conn.close()
-
-    return df
+    with engine.connect() as conn, conn.begin():  
+        df = pd.read_sql_table(db_table, conn)  
+        return df
 
 def update_map_data(id, status, pressure):
     try:
         # Establish a connection to the database
-        conn = sqlite3.connect('./streamlit/hydrant.db')
+        conn = psycopg2.connect(
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=db_port,
+        )
         cursor = conn.cursor()
 
-        update_query = "UPDATE " + db_table+" SET status = ?, pressure = ? WHERE id = ?"
-        # Write your SQL query
+        # Correct the placeholder syntax
+        update_query = "UPDATE " + db_table + " SET status = %s, pressure = %s WHERE id = %s"
+
+        # Execute the query
         cursor.execute(update_query, (status, pressure, id))
         conn.commit()
 
+        # Check if any row is affected
+        if cursor.rowcount == 0:
+            print("No rows updated")
+            return False
 
-        query = "SELECT * FROM hydrant_status WHERE id = 14336"
-        cursor.execute(query)
-        row = cursor.fetchall()
-        print(row)
+        return True
 
-    except sqlite3.Error as e:
-        print("Database error:", e)
-        row = ''
+    except psycopg2.Error as e:
+        print(f"An error occurred: {e}")
+        conn.rollback()
+        return False
 
     finally:
-        # Close the connection
-        conn.close()
-        return row
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 
 def make_map(df):
     color_scale = {'not ok': 'red', 'ok': 'green', 'needs testing': 'yellow'} 
