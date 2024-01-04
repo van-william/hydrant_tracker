@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 # Define your password
 correct_password = os.environ.get('HYDRANT_PASSWORD')
 
-db_host = os.getenv('HYDRANT_DB_HOST')
+db_host = os.getenv('HYDRANT_HOST')
 db_name = os.getenv('HYDRANT_DB')
 db_user = os.getenv('HYDRANT_USER')
 db_password = os.getenv('HYDRANT_PASS')

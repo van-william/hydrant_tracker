@@ -1,0 +1,39 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}Map View{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8js7LqU7WxZPii1M9Aa8csp0_l7R-OM8&callback=initMap" async defer></script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+<script type="text/javascript">
+    let hydrantPoints = {{ points|tojson }};
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Map View</h1>
+    <div id="map" style="height: 400px;"></div>
+    
+    <!-- The section below can be used for displaying a form or messages -->
+    <div class="mt-4">
+        <h2>Point Details</h2>
+        <!-- You can dynamically fill this part with point details when a point is clicked -->
+        <!-- This is a static example; in a real app, you'd update this with JavaScript or via form submission -->
+        <form action="{{ url_for('update_point', point_id=123) }}" method="post">
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <input type="text" class="form-control" id="status" name="status">
+            </div>
+            <div class="form-group">
+                <label for="pressure">Pressure:</label>
+                <input type="number" class="form-control" id="pressure" name="pressure">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Point</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
