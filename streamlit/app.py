@@ -7,6 +7,7 @@ import plotly.express as px
 import psycopg2
 from sqlalchemy import URL
 from sqlalchemy import create_engine
+import logging
 
 # Define your password
 correct_password = os.environ.get('HYDRANT_PASSWORD')
@@ -29,13 +30,11 @@ def get_map_data():
     "postgresql",
     username=os.getenv('HYDRANT_USER'),
     password=os.getenv('HYDRANT_PASS'),
-    host=os.getenv('HYDRANT_DB_HOST'),
+    host=os.getenv('HYDRANT_HOST'),
     database=os.getenv('HYDRANT_DB'),
 )
     # Create a SQLAlchemy engine
     engine = create_engine(url_object)
-    # Write your SQL query
-    query = "SELECT * FROM " + db_table
 
     with engine.connect() as conn, conn.begin():  
         df = pd.read_sql_table(db_table, conn)  
