@@ -24,7 +24,7 @@ db_table = os.environ.get('HYDRANT_DB_TABLE')
 st.set_page_config(page_title='Hydrant Tracker', layout='centered')
 
 
-def get_map_data():
+def get_map_data(table):
     # Establish a connection to the database
     url_object = URL.create(
     "postgresql",
@@ -37,7 +37,7 @@ def get_map_data():
     engine = create_engine(url_object)
 
     with engine.connect() as conn, conn.begin():  
-        df = pd.read_sql_table(db_table, conn)  
+        df = pd.read_sql_table(table, conn)  
         return df
 
 def update_map_data(id, status, pressure):
@@ -113,13 +113,16 @@ if password == correct_password:
     st.success('Password Correct!')
 
     # Generate the navbar with buttons
-    cols = st.columns(6)
+    cols = st.columns(3)
     with cols[0]:
         if st.button('Map'):
             st.session_state['page'] = 'Map'
     with cols[1]:
         if st.button('Issues'):
             st.session_state['page'] = 'Issues'
+    with cols[2]:
+        if st.button('Wicker Park'):
+            st.session_state['page'] = 'Wicker Park'
 
 
      # Set default page if not selected
@@ -130,7 +133,7 @@ if password == correct_password:
     if st.session_state['page'] == 'Map':
 
         st.subheader('Hydrant Map')
-        df = get_map_data()
+        df = get_map_data(db_table)
         fig = make_map(df)
         st.plotly_chart(fig)
 
@@ -149,6 +152,28 @@ if password == correct_password:
     # Render page based on navigation selection
     if st.session_state['page'] == 'Issues':
         st.subheader('Hydrants with Issues')
+
+
+        # Render page based on navigation selection
+    if st.session_state['page'] == 'Wicker Park':
+        st.subheader('Hydrants with Issues')
+
+        st.subheader('Hydrant Map')
+        df = get_map_data('wicker_park_hydrants')
+        fig = make_map(df)
+        st.plotly_chart(fig)
+
+
+        # Input form
+        with st.form('Data Input Form'):
+            id = st.number_input('id', step=1)
+            status = st.text_input('status')
+            pressure = st.number_input('pressure', format="%.1f")
+            submitted = st.form_submit_button('Update Hydrant')
+
+            if submitted:
+                row = update_map_data(id, status, pressure)
+                st.rerun()
 
 
 
