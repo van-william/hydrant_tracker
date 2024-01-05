@@ -113,7 +113,7 @@ if password == correct_password:
     st.success('Password Correct!')
 
     # Generate the navbar with buttons
-    cols = st.columns(3)
+    cols = st.columns(4)
     with cols[0]:
         if st.button('Map'):
             st.session_state['page'] = 'Map'
@@ -123,6 +123,9 @@ if password == correct_password:
     with cols[2]:
         if st.button('Wicker Park'):
             st.session_state['page'] = 'Wicker Park'
+    with cols[3]:
+        if st.button('Wicker Park Issues'):
+            st.session_state['page'] = 'Wicker Park Issues'
 
 
      # Set default page if not selected
@@ -156,12 +159,11 @@ if password == correct_password:
 
         # Render page based on navigation selection
     if st.session_state['page'] == 'Wicker Park':
-        st.subheader('Hydrants with Issues')
 
         st.subheader('Hydrant Map')
-        df = get_map_data('wicker_park_hydrants')
-        fig = make_map(df)
-        st.plotly_chart(fig)
+        df_wicker = get_map_data('wicker_park_hydrants')
+        fig_wicker = make_map(df_wicker)
+        st.plotly_chart(fig_wicker)
 
 
         # Input form
@@ -174,6 +176,15 @@ if password == correct_password:
             if submitted:
                 row = update_map_data(id, status, pressure)
                 st.rerun()
+
+    if st.session_state['page'] == 'Wicker Park Issues':
+        st.subheader('Wicker Hydrants with Issues')
+        df_wicker = get_map_data('wicker_park_hydrants')
+
+        df_wicker_issues = df_wicker[df_wicker['status'] == 'not ok']
+        df_wicker_issues = df_wicker_issues.head(10)
+        # Use Streamlit's markdown to display the DataFrame as HTML
+        st.markdown(df_wicker_issues.to_html(escape=False, index=True), unsafe_allow_html=True)
 
 
 
